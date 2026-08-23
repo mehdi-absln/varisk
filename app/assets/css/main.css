@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@import "shabnam-font/dist/font-face.css";
+
+@theme {
+  /* Brand palette — dark petrol teal, matching the 2021 heritage */
+  --color-night: #0B1A20;
+  --color-panel: #10242B;
+  --color-panel2: #122830;
+  --color-edge: #1E3A42;
+  --color-mist: #8FA6AC;
+  --color-snow: #F1F5F5;
+  --color-teal: #2DD4BF;
+  --color-teal-deep: #0F3B38;
+  --color-coral: #F87171;
+  --color-coral-deep: #4A1518;
+  --color-gold: #EAB308;
+
+  --font-sans: "Shabnam", Tahoma, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-night);
+  color: var(--color-snow);
+  font-family: var(--font-sans);
+}
