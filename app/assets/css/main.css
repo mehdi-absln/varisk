@@ -1,29 +1,320 @@
 @import "tailwindcss";
 @import "shabnam-font/dist/font-face.css";
 
+/*
+  ── Varisk design system ───────────────────────────────────────────────────
+
+  A risk console, not a brochure. The page is a dark instrument panel: deep
+  navy ground, floating glass panels, and one loud colour reserved for the
+  number that matters — the loss figure. Everything else is graphite.
+
+  Every colour goes through two hops: `--bg` and friends hold the raw value and
+  swap per theme, `--color-*` exposes them to Tailwind. A single attribute on
+  <html> repaints the whole app and no component needs to know a theme exists.
+*/
+
+/* ── Dark: the default ──────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  --bg: #070B12;          /* page ground */
+  --bg-soft: #0B111C;     /* banded sections, recessed inputs */
+  --card: #0F1725;        /* panels */
+  --card-hi: #151F30;     /* hover fills, nested blocks */
+  --line: #1D2839;        /* panel edges, table rules */
+  --line-soft: #141D2B;   /* quiet dividers */
+
+  --text: #E9EEF7;        /* headings, figures */
+  --text-2: #98A5BB;      /* body copy */
+  --text-3: #7B89A2;      /* labels, captions */
+
+  --brand: #22D3B4;       /* the colour of the product itself */
+  --brand-ink: #052E27;   /* text on a solid brand fill */
+  --risk: #FF6B7A;        /* loss, VaR, destructive */
+  --gain: #35D399;        /* profit */
+  --gold: #F2B33D;        /* warnings, highlights */
+
+  --glow-a: rgba(34, 211, 180, 0.16);
+  --glow-b: rgba(91, 140, 255, 0.14);
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+                  0 24px 48px -24px rgba(0, 0, 0, 0.9);
+  --grid-line: rgba(255, 255, 255, 0.035);
+}
+
+/* ── Light: same structure, daylight values ─────────────────────────────── */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #F5F8FC;
+  --bg-soft: #EDF2F9;
+  --card: #FFFFFF;
+  --card-hi: #F6F9FD;
+  --line: #DFE6F0;
+  --line-soft: #EBF0F7;
+
+  --text: #0B1220;
+  --text-2: #4B5A70;
+  --text-3: #636F86;
+
+  --brand: #0A7F6D;
+  --brand-ink: #FFFFFF;
+  --risk: #D93B52;
+  --gain: #0E9C6E;
+  --gold: #B87A0B;
+
+  --glow-a: rgba(10, 127, 109, 0.13);
+  --glow-b: rgba(91, 140, 255, 0.12);
+  --shadow-panel: 0 1px 2px rgba(11, 18, 32, 0.04),
+                  0 16px 40px -28px rgba(11, 18, 32, 0.35);
+  --grid-line: rgba(11, 18, 32, 0.04);
+}
+
 @theme {
-  /* Brand palette — dark petrol teal, matching the 2021 heritage */
-  --color-night: #0B1A20;
-  --color-panel: #10242B;
-  --color-panel2: #122830;
-  --color-edge: #1E3A42;
-  --color-mist: #8FA6AC;
-  --color-snow: #F1F5F5;
-  --color-teal: #2DD4BF;
-  --color-teal-deep: #0F3B38;
-  --color-coral: #F87171;
-  --color-coral-deep: #4A1518;
-  --color-gold: #EAB308;
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-card: var(--card);
+  --color-card-hi: var(--card-hi);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
 
-  --font-sans: "Shabnam", Tahoma, sans-serif;
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-risk: var(--risk);
+  --color-gain: var(--gain);
+  --color-gold: var(--gold);
+
+  --font-sans: "Shabnam", "Segoe UI", Tahoma, sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
+@layer base {
+  /* ── Base ───────────────────────────────────────────────────────────────── */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "Shabnam", "Segoe UI", Tahoma, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Persian body copy needs more leading than a latin default gives it. */
+  p {
+    line-height: 2;
+  }
+
+  ::selection {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
-body {
-  background-color: var(--color-night);
-  color: var(--color-snow);
-  font-family: var(--font-sans);
+@layer components {
+  /* ── Type helpers ───────────────────────────────────────────────────────── */
+
+  /* Small tracked-out label above a heading. */
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+  }
+
+  /* Figures line up in columns wherever they stack. */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Headline numbers: tight, heavy, unmissable. */
+  .figure {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+  /* The one panel treatment the whole app uses. */
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-panel);
+  }
+
+  /* A panel that reacts to the pointer — feature cards, clickable rows. */
+  .panel-lift {
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1),
+                border-color 0.25s, box-shadow 0.25s;
+  }
+  .panel-lift:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in oklab, var(--brand) 45%, var(--line));
+  }
+
+  /* Faint engineering graph paper — the backdrop of the hero and CTA bands. */
+  .grid-field {
+    background-image:
+      linear-gradient(to left, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 30%, transparent 78%);
+  }
+
+  /* Two soft coloured lights behind the hero, so the ground is never flat. */
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    inset-block-start: -22%;
+    width: 46rem;
+    height: 34rem;
+    border-radius: 999px;
+    filter: blur(90px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .aurora::before {
+    inset-inline-end: -14%;
+    background: var(--glow-a);
+  }
+  .aurora::after {
+    inset-inline-start: -18%;
+    background: var(--glow-b);
+  }
+
+  /* ── Controls ───────────────────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.72rem 1.4rem;
+    transition: transform 0.18s, background-color 0.18s, border-color 0.18s, color 0.18s;
+    white-space: nowrap;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn-primary {
+    background: var(--brand);
+    color: var(--brand-ink);
+    box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--brand) 80%, transparent);
+  }
+  .btn-primary:hover {
+    background: color-mix(in oklab, var(--brand) 86%, white);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--line);
+    color: var(--text);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    border-color: color-mix(in oklab, var(--brand) 50%, var(--line));
+    background: var(--card-hi);
+  }
+
+  /* Inputs read as recessed slots rather than outlined boxes. */
+  .field {
+    width: 100%;
+    background: var(--bg-soft);
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.18s, background-color 0.18s;
+  }
+  .field:hover {
+    background: var(--card-hi);
+  }
+  .field:focus {
+    border-color: var(--brand);
+    background: var(--bg-soft);
+  }
+  .field::placeholder {
+    color: var(--text-3);
+    opacity: 0.75;
+  }
+
+  /* Numeric inputs lose their spinners — the arrows are never the right step. */
+  .field[type="number"]::-webkit-outer-spin-button,
+  .field[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .field[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* A pill that states a fact: "۴ سهم", "۶۰ قیمت", "۹۵٪". */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--card-hi);
+    color: var(--text-2);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.28rem 0.7rem;
+    white-space: nowrap;
+  }
+
+}
+
+/* ── List motion ──────────────────────────────────────────────────────────── */
+
+/*
+ * Portfolio rows. A new row slides down into place; a removed one lifts out of
+ * the flow (hence `absolute`, against the `relative` list) so the rows below
+ * glide up under `.row-move` instead of snapping.
+ *
+ * Deliberately unlayered: the row's own `transition-colors` utility lives in
+ * Tailwind's `utilities` layer, which outranks `components`. Layered here, our
+ * `transition-property` lost to it and opacity/transform snapped instead of
+ * easing — the classes were applied, but nothing actually animated.
+ *
+ * The reduced-motion block below neutralises all of it.
+ */
+.row-enter-active { transition: opacity 0.28s ease, transform 0.28s ease; }
+.row-enter-from { opacity: 0; transform: translateY(-0.5rem); }
+
+.row-leave-active {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  position: absolute;
+  width: 100%;
+}
+.row-leave-to { opacity: 0; transform: translateY(0.35rem) scale(0.985); }
+
+.row-move { transition: transform 0.28s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

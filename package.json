@@ -1,5 +1,5 @@
 {
-  "name": "shalil-app",
+  "name": "varisk-app",
   "type": "module",
   "private": true,
   "scripts": {
@@ -15,7 +15,8 @@
     "nuxt": "^4.5.2",
     "shabnam-font": "^5.0.0",
     "vue": "^3.5.41",
-    "vue-router": "^5.2.0"
+    "vue-router": "^5.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

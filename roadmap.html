@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نقشه راه — بازسازی شلیل اپ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1A20;
+    --panel:#10242B;
+    --panel-2:#122830;
+    --border:#1E3A42;
+    --text:#F1F5F5;
+    --muted:#8FA6AC;
+    --accent:#2DD4BF;
+    --accent-dim:#0F3B38;
+    --red:#F87171;
+    --red-dim:#4A1518;
+    --gold:#EAB308;
+    --track:#1A323A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Vazirmatn',Tahoma,sans-serif;
+    line-height:1.9;
+    min-height:100vh;
+    padding:64px 20px 120px;
+  }
+  .col{max-width:780px;margin:0 auto}
+
+  /* ── Header ─────────────────────────── */
+  .eyebrow{
+    color:var(--accent);
+    font-size:.82rem;
+    font-weight:600;
+    letter-spacing:.06em;
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(1.9rem,5vw,2.7rem);
+    font-weight:800;
+    line-height:1.4;
+    margin-bottom:14px;
+  }
+  .lede{
+    color:var(--muted);
+    font-size:.98rem;
+    font-weight:300;
+    max-width:62ch;
+  }
+  .lede b{color:var(--text);font-weight:600}
+
+  /* ── Section divider with label ─────── */
+  .section{margin-top:56px}
+  .section-head{
+    display:flex;align-items:center;gap:14px;margin-bottom:20px;
+  }
+  .section-head h2{
+    color:var(--accent);
+    font-size:.92rem;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .section-head::after{
+    content:'';flex:1;height:1px;background:var(--border);
+  }
+
+  /* ── Pillar cards ───────────────────── */
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  @media(max-width:640px){.cards{grid-template-columns:1fr}}
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:18px 16px;
+  }
+  .card h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:.8rem;font-weight:300;line-height:1.8}
+
+  /* ── Audit rows ─────────────────────── */
+  .rows{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .row-item{
+    display:flex;gap:14px;align-items:flex-start;
+    padding:14px 18px;
+  }
+  .row-item+.row-item{border-top:1px solid var(--border)}
+  .pill{
+    flex-shrink:0;
+    font-size:.72rem;
+    font-weight:600;
+    padding:2px 12px;
+    border-radius:999px;
+    margin-top:5px;
+  }
+  .pill.ok{background:var(--accent-dim);color:var(--accent)}
+  .pill.warn{background:var(--red-dim);color:var(--red)}
+  .row-item h4{font-size:.88rem;font-weight:600;line-height:1.6}
+  .row-item p{color:var(--muted);font-size:.78rem;font-weight:300;line-height:1.8}
+  code{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:1px 7px;
+    font-size:.75em;
+    color:var(--accent);
+    font-family:'Vazirmatn',monospace;
+    direction:ltr;
+    display:inline-block;
+  }
+
+  /* ── Phases ─────────────────────────── */
+  .phase{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:18px;
+    overflow:hidden;
+  }
+  .phase-head{
+    display:flex;align-items:center;gap:12px;
+    padding:16px 18px 12px;
+  }
+  .phase-num{
+    flex-shrink:0;
+    width:34px;height:34px;
+    border-radius:8px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--accent);
+    font-weight:800;
+    font-size:.85rem;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .phase-title{font-size:.98rem;font-weight:700}
+  .phase-sub{color:var(--muted);font-size:.74rem;font-weight:300}
+  .phase-meta{margin-inline-start:auto;text-align:left;flex-shrink:0}
+  .phase-count{
+    color:var(--muted);font-size:.75rem;font-weight:500;
+    font-variant-numeric:tabular-nums;
+  }
+  .phase-count b{color:var(--accent)}
+  .mini-track{
+    width:90px;height:5px;background:var(--track);
+    border-radius:99px;margin-top:6px;overflow:hidden;
+  }
+  .mini-fill{
+    height:100%;width:0%;
+    background:var(--accent);border-radius:99px;
+    transition:width .45s cubic-bezier(.4,0,.2,1);
+  }
+  .tasks{padding:4px 0 10px}
+  .task{
+    display:flex;gap:13px;align-items:flex-start;
+    padding:11px 18px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .task:hover{background:rgba(45,212,191,.04)}
+  .task+.task{border-top:1px solid rgba(30,58,66,.55)}
+  .task input{position:absolute;opacity:0;pointer-events:none}
+  .box{
+    flex-shrink:0;
+    width:21px;height:21px;
+    margin-top:5px;
+    border:1.5px solid var(--border);
+    border-radius:6px;
+    position:relative;
+    transition:all .2s;
+  }
+  .box::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:no-repeat center/12px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1A20' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+    opacity:0;
+    transform:scale(.5);
+    transition:all .2s;
+  }
+  .task input:checked ~ .box{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .task input:checked ~ .box::after{opacity:1;transform:scale(1)}
+  .task-txt{flex:1}
+  .task-txt h5{font-size:.87rem;font-weight:600;line-height:1.7;transition:color .2s}
+  .task-txt p{color:var(--muted);font-size:.76rem;font-weight:300;line-height:1.75}
+  .tag{
+    display:inline-block;
+    font-size:.68rem;font-weight:600;
+    color:var(--accent);
+    background:var(--accent-dim);
+    border-radius:5px;
+    padding:0 8px;
+    margin-inline-start:8px;
+    vertical-align:1px;
+  }
+  .task.done .task-txt h5{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(143,166,172,.5)}
+  .task.done{opacity:.62}
+
+  /* ── Overall progress ───────────────── */
+  .progress-box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px 22px;
+  }
+  .progress-line{
+    display:flex;align-items:center;gap:16px;
+  }
+  .progress-label{font-size:.9rem;font-weight:700;white-space:nowrap}
+  .progress-val{
+    margin-inline-start:auto;
+    color:var(--accent);
+    font-weight:800;
+    font-size:1.15rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .big-track{
+    height:8px;background:var(--track);
+    border-radius:99px;overflow:hidden;margin-top:14px;
+  }
+  .big-fill{
+    height:100%;width:0%;
+    background:linear-gradient(270deg,#2DD4BF,#14B8A6);
+    border-radius:99px;
+    transition:width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .done-msg{
+    display:none;
+    color:var(--gold);
+    font-size:.8rem;font-weight:600;
+    margin-top:12px;
+  }
+  .done-msg.show{display:block}
+
+  footer{
+    margin-top:48px;
+    text-align:center;
+    color:var(--muted);
+    font-size:.76rem;font-weight:300;
+  }
+  footer .quote{
+    color:var(--text);font-size:.86rem;font-weight:500;
+    margin-bottom:14px;display:block;
+  }
+  #reset{
+    background:none;border:none;
+    color:var(--muted);font-family:inherit;font-size:.72rem;
+    cursor:pointer;opacity:.7;
+    border-bottom:1px dashed var(--border);
+    padding-bottom:2px;
+    transition:opacity .15s,color .15s;
+  }
+  #reset:hover{opacity:1;color:var(--red)}
+
+  /* ── Floating progress pill ─────────── */
+  #float-pill{
+    position:fixed;
+    bottom:22px;inset-inline-start:22px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:8px 18px;
+    font-size:.8rem;font-weight:700;
+    box-shadow:0 8px 30px rgba(0,0,0,.45);
+    z-index:50;
+    font-variant-numeric:tabular-nums;
+  }
+  #float-pill b{color:var(--accent)}
+
+  /* ── Decorative gold dot ────────────── */
+  .gold-dot{
+    position:fixed;
+    bottom:-26px;inset-inline-end:60px;
+    width:70px;height:70px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#FDE047,var(--gold));
+    opacity:.85;
+    filter:blur(.3px);
+    pointer-events:none;
+    z-index:40;
+  }
+</style>
+</head>
+<body>
+<div class="col">
+
+  <!-- ═══ Header ═══ -->
+  <header>
+    <div class="eyebrow">شلیل اپ — نسخهٔ ۱٫۰</div>
+    <h1>نقشه راه بازسازی شلیل اپ</h1>
+    <p class="lede">
+      از یک پروتوتایپ HTML سال ۱۴۰۰ تا یک ابزار واقعی محاسبهٔ <b>ارزش در معرض خطر (VaR)</b>
+      برای پرتفوی سهام — با Nuxt 4، موتور ریاضی تایپ‌اسکریپتی و استقرار رایگان.
+      با حدود <b>۸ تا ۱۰ ساعت در هفته</b>، نسخهٔ MVP طی دو تا سه هفته آمادهٔ انتشار است.
+      هر تسک را که تمام کردی، تیک بزن؛ پیشرفت اینجا ذخیره می‌شود.
+    </p>
+  </header>
+
+  <!-- ═══ Three pillars ═══ -->
+  <div class="section">
+    <div class="section-head"><h2>سه ستونی که این برنامه روی آن بنا شده</h2></div>
+    <div class="cards">
+      <div class="card">
+        <h3>ریاضی واقعی، نه دکوری</h3>
+        <p>موتور محاسبهٔ وردایی، هم‌وردایی، بتا و VaR کاملاً سمت کلاینت با TypeScript و پوشش کامل تست — همان مفاهیمی که صفحات قدیمی فقط اسمشان را داشتند.</p>
+      </div>
+      <div class="card">
+        <h3>دیتا را ببین، فقط نخوان</h3>
+        <p>جدول نتایج خشک ۲۰۲۱ تبدیل می‌شود به نقشهٔ حرارتی ماتریس هم‌وردایی و نمودار VaR در سه سطح اطمینان ۹۰/۹۵/۹۹ درصد.</p>
+      </div>
+      <div class="card">
+        <h3>صفر تومان زیرساخت</h3>
+        <p>کل محاسبات در مرورگر انجام می‌شود؛ نیازی به سرور نیست. استقرار استاتیک روی Vercel — سرور فقط در فاز اختیاری وارد می‌شود.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Audit ═══ -->
+  <div class="section">
+    <div class="section-head"><h2>ممیزی میراث — وضعیت پروژهٔ ۱۴۰۰</h2></div>
+    <div class="rows">
+      <div class="row-item">
+        <span class="pill ok">سالم</span>
+        <div>
+          <h4>۱۵ صفحهٔ پروتوتایپ کامل با فلو کاربری</h4>
+          <p>لندینگ، ثبت‌نام و ورود، بازیابی رمز، لیست پروژه‌ها، فرم پروژهٔ جدید، صفحهٔ نتایج — طراحی و مسیر کاربر از قبل موجود است.</p>
+        </div>
+      </div>
+      <div class="row-item">
+        <span class="pill ok">سالم</span>
+        <div>
+          <h4>هویت بصری و دارایی‌های گرافیکی</h4>
+          <p>لوگو، SVGها و خروجی‌های طراحی در پوشهٔ <code>shalil app design</code> نگهداری شده‌اند.</p>
+        </div>
+      </div>
+      <div class="row-item">
+        <span class="pill warn">حیاتی</span>
+        <div>
+          <h4>هیچ منطق محاسبه‌ای پیاده نشده</h4>
+          <p>جدول «نتایج» در <code>app-result.html</code> کاملاً استاتیک است — میانگین، وردایی و بتا فقط متن هستند، نه عدد واقعی.</p>
+        </div>
+      </div>
+      <div class="row-item">
+        <span class="pill warn">حیاتی</span>
+        <div>
+          <h4>بدون بک‌اند و بدون تست</h4>
+          <p>احراز هویت و ذخیره‌سازی فقط در حد UI است؛ Bootstrap خام، بدون کامپوننت‌سازی و حتی یک خط تست.</p>
+        </div>
+      </div>
+      <div class="row-item">
+        <span class="pill warn">حیاتی</span>
+        <div>
+          <h4>ورودی دستی، بدون دادهٔ بازار</h4>
+          <p>فرم «مقدار سهام» به هیچ منبع قیمت متصل نیست؛ کاربر باید همه‌چیز را خودش وارد کند.</p>
+        </div>
+      </div>
+
+      <div class="row-item">
+        <span class="pill warn">حیاتی</span>
+        <div>
+          <h4>سه قابلیت پروتوتایپ که از قلم افتاده بودند</h4>
+          <p>بازخوانی ۱۵ صفحهٔ ۱۴۰۰ نشان داد آپلود فایل، بازهٔ تاریخ و «مقدار سهام» در هیچ فازی نبودند. هر سه به فاز رابط کاربری اضافه شدند.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Phases ═══ -->
+  <div class="section">
+    <div class="section-head"><h2>پنج فاز تا انتشار</h2></div>
+
+    <!-- Phase 0 -->
+    <section class="phase" data-phase="0">
+      <div class="phase-head">
+        <div class="phase-num">۰</div>
+        <div>
+          <div class="phase-title">زیرساخت</div>
+          <div class="phase-sub">پروژه، ابزارها، دیپلوی زنده</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-count"><b>۰</b> از ۵</div>
+          <div class="mini-track"><div class="mini-fill"></div></div>
+        </div>
+      </div>
+      <div class="tasks">
+        <label class="task"><input type="checkbox" id="p0t1"><span class="box"></span>
+          <div class="task-txt">
+            <h5>ساخت پروژهٔ Nuxt 4 و ریپوی گیت</h5>
+            <p><code>npx nuxi@latest init shalil-app</code> در مسیر پروژه‌ها، ریپوی GitHub با نام shalil-app، اولین کامیت.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p0t2"><span class="box"></span>
+          <div class="task-txt">
+            <h5>Tailwind، فونت شبنم و قالب RTL</h5>
+            <p>نصب Tailwind، تنظیم <code>dir="rtl"</code> و <code>lang="fa"</code>، پالت «کاغذ و جوهر» (زمینهٔ <code>#FAF7F2</code>، جوهر <code>#1A1815</code>، اکسنت زرشکی <code>#7C2D2D</code>).</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p0t3"><span class="box"></span>
+          <div class="task-txt">
+            <h5>راه‌اندازی Vitest</h5>
+            <p>نصب <code>vitest</code>، اسکریپت <code>test</code> در package.json، یک تست نمونهٔ سبز برای اطمینان از سیم‌کشی.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p0t4"><span class="box"></span>
+          <div class="task-txt">
+            <h5>دیپلوی اولیه روی Vercel</h5>
+            <p>اتصال ریپو به Vercel؛ هدف: یک صفحهٔ خالی سبز روی دامنهٔ پروژه تا پایان روز اول.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p0t5"><span class="box"></span>
+          <div class="task-txt">
+            <h5>قفل برند و README</h5>
+            <p>تعریف توکن‌های رنگ و فونت در یک فایل CSS مشترک؛ README با همان قانون همیشگی: یک خط مثبت، بدون ذکر محدودیت‌ها.</p>
+          </div>
+        </label>
+      </div>
+    </section><section class="phase" data-phase="1">
+      <div class="phase-head">
+        <div class="phase-num">۲</div>
+        <div>
+          <div class="phase-title">رابط کاربری</div>
+          <div class="phase-sub">دیزاین اول — کامپوننت‌ها با دادهٔ نمونه، بعد موتور واقعی</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-count"><b>۰</b> از ۹</div>
+          <div class="mini-track"><div class="mini-fill"></div></div>
+        </div>
+      </div>
+      <div class="tasks">
+        <label class="task"><input type="checkbox" id="p1t1"><span class="box"></span>
+          <div class="task-txt">
+            <h5>لِی‌اوت اصلی و هیرو</h5>
+            <p>ستون مرکزی ~۸۰۰px، هدر با لوگوی شلیل، تیتر «به راحتی ارزش در معرض خطر را محاسبه کنید» از لندینگ قدیمی.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t2"><span class="box"></span>
+          <div class="task-txt">
+            <h5>فرم پرتفوی داینامیک</h5>
+            <p>افزودن/حذف نامحدود سهم با مقدار تومانی و درصد وزن؛ کامپوننت <code>StockRow.vue</code> با انیمیشن ورود.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t3"><span class="box"></span>
+          <div class="task-txt">
+            <h5>اعتبارسنجی با Zod</h5>
+            <p>جمع وزن‌ها = ۱۰۰٪، اعداد نامنفی، حداقل یک سهم؛ پیام‌های خطا به فارسی زیر هر ردیف.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t4"><span class="box"></span>
+          <div class="task-txt">
+            <h5>پنل نتایج: کارت‌های KPI</h5>
+            <p>سه کارت VaR (۹۰/۹۵/۹۹) با اعداد فارسی و جملهٔ قابل فهم: «با اطمینان ۹۵٪، ضرر فردا بیشتر از X نخواهد بود.»</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t5"><span class="box"></span>
+          <div class="task-txt">
+            <h5>نقشهٔ حرارتی ماتریس هم‌وردایی</h5>
+            <p>SVG با مقیاس رنگی (سبز→قرمز)، هاور هر خانه نشان‌دهندهٔ ضریب؛ جایگزین جدول خشک ۲۰۲۱.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t6"><span class="box"></span>
+          <div class="task-txt">
+            <h5>نمودار بتا و دکمهٔ دادهٔ نمونه</h5>
+            <p>میله‌نگارهٔ بتای هر سهم نسبت به بازار + دکمهٔ «پرتفوی نمونه» برای امتحان سریع بدون تایپ.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t7"><span class="box"></span>
+          <div class="task-txt">
+            <h5>بارگذاری جدول قیمت <span class="tag">از پروتوتایپ</span></h5>
+            <p>کشیدن و رها کردن فایل CSV/TSV مثل <code>offline-project.html</code>؛ هر ستون یک سهم، با تشخیص خودکار ستون تاریخ و ستون شاخص کل.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t8"><span class="box"></span>
+          <div class="task-txt">
+            <h5>بازهٔ تاریخ اطلاعات <span class="tag">از پروتوتایپ</span></h5>
+            <p>تاریخ شروع و پایان به شمسی، با اعتبارسنجی کبیسه و اسفند؛ مقایسهٔ طول بازه با تعداد قیمت‌های وارد‌شده تا ناسازگاری داده لو برود.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p1t9"><span class="box"></span>
+          <div class="task-txt">
+            <h5>مقدار سهام: پیشنهادی یا دلخواه <span class="tag">از پروتوتایپ</span></h5>
+            <p>ورودی «تعداد سهم» به‌جای ارزش تومانی — ارزش از <code>quantity × last price</code> مشتق می‌شود. دو حالت «لیست پیشنهادی سیستم» و «لیست دلخواه» مثل <code>share-value.html</code>.</p>
+          </div>
+        </label>
+      </div>
+    </section><section class="phase" data-phase="2">
+      <div class="phase-head">
+        <div class="phase-num">۱</div>
+        <div>
+          <div class="phase-title">موتور محاسبات <span class="tag">TDD</span></div>
+          <div class="phase-sub">قلب پروژه — هر تابع با تست نوشته می‌شود</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-count"><b>۰</b> از ۷</div>
+          <div class="mini-track"><div class="mini-fill"></div></div>
+        </div>
+      </div>
+      <div class="tasks">
+        <label class="task"><input type="checkbox" id="p2t1"><span class="box"></span>
+          <div class="task-txt">
+            <h5>میانگین و وردایی</h5>
+            <p><code>app/utils/stats.ts</code> — میانگین نمونه‌ای و وردایی با مخرج <code>n−1</code>؛ تست با مثال دستی معلوم.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t2"><span class="box"></span>
+          <div class="task-txt">
+            <h5>بازده از سری قیمت</h5>
+            <p>بازده ساده و لگاریتمی از آرایهٔ قیمت‌های تاریخچه؛ تست با سری ۴ نقطه‌ای کنترل‌شده.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t3"><span class="box"></span>
+          <div class="task-txt">
+            <h5>کوواریانس و ماتریس Σ</h5>
+            <p>کوواریانس جفتی و ساخت ماتریس n×n؛ تست تقارن ماتریس و مثال دوسهمی با جواب معلوم.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t4"><span class="box"></span>
+          <div class="task-txt">
+            <h5>بتای هر سهم نسبت به بازار</h5>
+            <p><code>β = Cov(rᵢ, rₘ) / Var(rₘ)</code> — تست: بتای بازار با خودش باید دقیقاً ۱ شود.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t5"><span class="box"></span>
+          <div class="task-txt">
+            <h5>انحراف معیار پرتفوی</h5>
+            <p><code>σₚ = √(wᵀΣw)</code> — تست: دو سهم کاملاً همبسته باید واریانس جمع خطی بدهد؛ ناهمسبته، کمتر.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t6"><span class="box"></span>
+          <div class="task-txt">
+            <h5>VaR پارامتریک در سه سطح اطمینان</h5>
+            <p><code>VaR = z × σₚ × V</code> با ضرایب ۱٫۲۸۲ / ۱٫۶۴۵ / ۲٫۳۲۶ برای ۹۰/۹۵/۹۹ درصد؛ تست با پرتفوی تک‌سهمی.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p2t7"><span class="box"></span>
+          <div class="task-txt">
+            <h5>حالت‌های مرزی</h5>
+            <p>ورودی خالی، تک‌نمونه، واریانس صفر و وزن‌های منفی (فروش استقراضی) — هیچ‌کدام نباید NaN برگردانند.</p>
+          </div>
+        </label>
+      </div>
+    </section><section class="phase" data-phase="3">
+      <div class="phase-head">
+        <div class="phase-num">۳</div>
+        <div>
+          <div class="phase-title">صیقل و انتشار</div>
+          <div class="phase-sub">از «کار می‌کند» تا «در رزومه می‌درخشد»</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-count"><b>۰</b> از ۵</div>
+          <div class="mini-track"><div class="mini-fill"></div></div>
+        </div>
+      </div>
+      <div class="tasks">
+        <label class="task"><input type="checkbox" id="p3t1"><span class="box"></span>
+          <div class="task-txt">
+            <h5>ریسپانسیو کامل + تست آیفون واقعی</h5>
+            <p>فرم و نمودارها در موبایل؛ بررسی روی آیفون ۶s مثل روال همیشگی.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p3t2"><span class="box"></span>
+          <div class="task-txt">
+            <h5>حالت خالی و مدیریت خطا</h5>
+            <p>صفحهٔ Empty State به سبک پروتوتایپ قدیمی (<code>empty-state.html</code>) وقتی هنوز سهامی وارد نشده.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p3t3"><span class="box"></span>
+          <div class="task-txt">
+            <h5>سئو و اشتراک‌گذاری</h5>
+            <p><code>useSeoMeta</code>، تصویر OG، favicon از لوگوی شلیل.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p3t4"><span class="box"></span>
+          <div class="task-txt">
+            <h5>Lighthouse بالای ۹۰</h5>
+            <p>هر چهار شاخص عملکرد، دسترس‌پذیری، سئو و بهترین شیوه‌ها.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p3t5"><span class="box"></span>
+          <div class="task-txt">
+            <h5>مستندات و انتشار نهایی</h5>
+            <p>README و ARCHITECTURE (یک خط مثبت!)، حذف کدهای مرده، تگ v1.0.0.</p>
+          </div>
+        </label>
+      </div>
+    </section><section class="phase" data-phase="4">
+      <div class="phase-head">
+        <div class="phase-num">۴</div>
+        <div>
+          <div class="phase-title">فول‌استک <span class="tag" style="background:var(--panel-2);color:var(--muted)">اختیاری</span></div>
+          <div class="phase-sub">وقتی MVP زنده بود — سرور اینجا معنا پیدا می‌کند</div>
+        </div>
+        <div class="phase-meta">
+          <div class="phase-count"><b>۰</b> از ۵</div>
+          <div class="mini-track"><div class="mini-fill"></div></div>
+        </div>
+      </div>
+      <div class="tasks">
+        <label class="task"><input type="checkbox" id="p4t1"><span class="box"></span>
+          <div class="task-txt">
+            <h5>احراز هویت</h5>
+            <p>ثبت‌نام و ورود با الگوی پروژهٔ لرنینگ پلتفرم (نقش‌ها + session).</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p4t2"><span class="box"></span>
+          <div class="task-txt">
+            <h5>اسکیمای Turso و API Routes</h5>
+            <p>جدول <code>portfolios</code> (نام، سهام‌ها، مالک) + endpointهای CRUD در Nitro.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p4t3"><span class="box"></span>
+          <div class="task-txt">
+            <h5>ذخیره و بارگذاری پرتفوی</h5>
+            <p>دکمهٔ ذخیره در فرم، لیست پرتفوی‌های ذخیره‌شده در داشبورد.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p4t4"><span class="box"></span>
+          <div class="task-txt">
+            <h5>اتصال به دادهٔ بورس تهران</h5>
+            <p>دریافت سری قیمت واقعی (TSETC) برای محاسبه از بازده واقعی به‌جای ورودی دستی.</p>
+          </div>
+        </label>
+        <label class="task"><input type="checkbox" id="p4t5"><span class="box"></span>
+          <div class="task-txt">
+            <h5>صفحهٔ «پروژه‌های من»</h5>
+            <p>ادای احترام به <code>projects.html</code> سال ۱۴۰۰ — لیست پرتفوی‌ها با کارت و تاریخ آخرین محاسبه.</p>
+          </div>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══ Overall progress ═══ -->
+  <div class="section">
+    <div class="section-head"><h2>پیشرفت کلی</h2></div>
+    <div class="progress-box">
+      <div class="progress-line">
+        <span class="progress-label">مسیر ۳۱ تسکی</span>
+        <span class="progress-val" id="overall-pct">۰٪</span>
+      </div>
+      <div class="big-track"><div class="big-fill" id="overall-fill"></div></div>
+      <div class="done-msg" id="done-msg">🎉 تمام شد — از پروتوتایپ ۱۴۰۰ تا ابزار مالی واقعی. وقت جشن گرفتنه!</div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="quote">«هدف: از پروتوتایپ ۱۴۰۰ تا ابزاری که در مصاحبه درباره‌اش حرف می‌زنی.»</span>
+    <button id="reset">پاک کردن همهٔ تیک‌ها</button>
+  </footer>
+</div>
+
+<!-- Floating pill + gold decoration -->
+<div id="float-pill">پیشرفت کل: <b id="float-pct">۰٪</b></div>
+<div class="gold-dot"></div>
+
+<script>
+(function(){
+  const KEY='shalil-roadmap-v1';
+  const FA='۰۱۲۳۴۵۶۷۸۹';
+  const fa=n=>String(n).replace(/\d/g,d=>FA[d]);
+
+  // Collect all checkboxes grouped by phase
+  const phases={};
+  document.querySelectorAll('.phase').forEach(sec=>{
+    const p=sec.dataset.phase;
+    phases[p]=Array.from(sec.querySelectorAll('input[type=checkbox]'));
+  });
+
+  // Restore saved state
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}');}catch(e){saved={};}
+  Object.keys(phases).forEach(p=>{
+    phases[p].forEach(cb=>{
+      if(saved[cb.id])cb.checked=true;
+      cb.closest('.task').classList.toggle('done',cb.checked);
+    });
+  });
+
+  function render(){
+    let totalAll=0,doneAll=0;
+    Object.keys(phases).forEach(p=>{
+      const cbs=phases[p];
+      const done=cbs.filter(c=>c.checked).length;
+      totalAll+=cbs.length; doneAll+=done;
+      const sec=document.querySelector('.phase[data-phase="'+p+'"]');
+      sec.querySelector('.phase-count').innerHTML='<b>'+fa(done)+'</b> از '+fa(cbs.length);
+      sec.querySelector('.mini-fill').style.width=(done/cbs.length*100)+'%';
+    });
+    const pct=Math.round(doneAll/totalAll*100);
+    document.getElementById('overall-pct').textContent=fa(pct)+'٪';
+    document.getElementById('overall-fill').style.width=pct+'%';
+    document.getElementById('float-pct').textContent=fa(pct)+'٪';
+    document.getElementById('done-msg').classList.toggle('show',doneAll===totalAll);
+  }
+
+  document.querySelectorAll('.task input').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      cb.closest('.task').classList.toggle('done',cb.checked);
+      // Save
+      const state={};
+      document.querySelectorAll('.task input').forEach(c=>{if(c.checked)state[c.id]=true;});
+      localStorage.setItem(KEY,JSON.stringify(state));
+      render();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click',function(){
+    if(!confirm('همهٔ تیک‌ها پاک شوند؟'))return;
+    localStorage.removeItem(KEY);
+    document.querySelectorAll('.task input').forEach(c=>{
+      c.checked=false;c.closest('.task').classList.remove('done');
+    });
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,75 +1,77 @@
-# Nuxt Minimal Starter
+# واریسک
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+> ارزش در معرض خطر پرتفوی سهام را در مرورگر، هم‌زمان با تایپ، محاسبه می‌کند.
 
-## Setup
+نرم‌افزار محاسبهٔ ریسک بازار (VaR) برای پرتفوی معاملاتی سهام، بر پایهٔ رویکرد
+ماتریس ریسک و مقررات کمیتهٔ بال. کل محاسبه سمت کلاینت انجام می‌شود: هیچ سری
+قیمتی از مرورگر خارج نمی‌شود و هیچ سروری در مسیر نیست.
 
-Make sure to install dependencies:
+## راه‌اندازی
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
 ```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+روی `http://localhost:3001` بالا می‌آید. پورت ۳۰۰۱ عمدی است — در
+[`nuxt.config.ts`](nuxt.config.ts) قابل تغییر است.
 
-Build the application for production:
+## اسکریپت‌ها
+
+| دستور | کار |
+|---|---|
+| `npm run dev` | سرور توسعه با HMR |
+| `npm run build` | بیلد پروداکشن |
+| `npm run generate` | خروجی کاملاً استاتیک |
+| `npm run preview` | اجرای بیلد ساخته‌شده |
+| `npm test` | اجرای یک‌بارهٔ تست‌ها |
+| `npm run test:watch` | تست در حالت واچ |
+
+## ساختار
+
+| مسیر | محتوا |
+|---|---|
+| `app/pages/index.vue` | صفحهٔ معرفی |
+| `app/pages/calculate.vue` | فرم پرتفوی و پنل نتایج |
+| `app/components/` | ردیف سهم، نقشهٔ حرارتی، نمودار بتا، کارت‌های VaR |
+| `app/utils/content.ts` | نام محصول، سازنده و کل متن‌های ثابت |
+| `app/utils/portfolioSchema.ts` | قواعد اعتبارسنجی فرم با Zod |
+| `app/utils/parsePrices.ts` · `parseTable.ts` | خواندن سری قیمت و فایل CSV/TSV |
+| `app/utils/jalali.ts` | تجزیه و اعتبارسنجی تاریخ شمسی |
+| `app/utils/quantity.ts` | تبدیل سرمایهٔ فرضی به تعداد سهم |
+| `app/utils/mock.ts` | دادهٔ نمونهٔ قطعی برای ساخت رابط |
+| `app/types/portfolio.ts` | قرارداد مشترک فرم، موتور و نتایج |
+| `app/assets/css/main.css` | توکن‌های رنگ، تایپوگرافی و تم روشن/تیره |
+| `tests/` | تست‌های Vitest |
+
+## تغییر نام و برند
+
+نام محصول و نام سازنده هر دو در [`app/utils/content.ts`](app/utils/content.ts)
+به‌صورت `SITE_NAME` و `BUILDER` تعریف شده‌اند؛ هدر، فوتر و عنوان صفحه‌ها همه از
+همان‌جا رندر می‌شوند.
+
+پالت رنگ و فونت در [`app/assets/css/main.css`](app/assets/css/main.css) به‌صورت
+متغیرهای CSS قفل شده‌اند. هر رنگ دو پله دارد: `--bg` و هم‌خانواده‌هایش مقدار خام
+را نگه می‌دارند و با تم عوض می‌شوند، `--color-*` همان را به Tailwind می‌دهد. یک
+اتریبیوت روی `<html>` کل برنامه را بازرنگ می‌کند.
+
+## پشته
+
+Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS 4 · Zod · Vitest · فونت شبنم
+
+## استقرار
+
+خروجی استاتیک است، پس هر میزبان فایل ثابتی کار می‌کند:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+npm run generate
 ```
 
-Locally preview production build:
+پروژه به Vercel متصل است و هر پوش روی شاخهٔ اصلی به‌صورت خودکار منتشر می‌شود.
 
-```bash
-# npm
-npm run preview
+## سازنده
 
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+مهدی آبسالان — طراحی و توسعه
