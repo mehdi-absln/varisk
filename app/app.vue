@@ -1,6 +1,25 @@
 <script setup lang="ts">
 const route = useRoute()
 
+/*
+  Site-wide social metadata. Declared once here so a page only has to supply
+  its own title, description and URL — see `usePageSeo`.
+*/
+useSeoMeta({
+  ogSiteName: SITE_NAME,
+  ogType: 'website',
+  ogLocale: 'fa_IR',
+  ogImage: useAbsoluteUrl('/og.jpg'),
+  ogImageType: 'image/jpeg',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogImageAlt: `${SITE_NAME} — ${HEADLINE.title}`,
+  twitterCard: 'summary_large_image',
+  twitterImage: useAbsoluteUrl('/og.jpg'),
+  twitterImageAlt: `${SITE_NAME} — ${HEADLINE.title}`,
+  author: BUILDER,
+})
+
 const nav = [
   { to: '/', label: 'معرفی' },
   { to: '/calculate', label: 'محاسبه' },
@@ -11,11 +30,16 @@ const nav = [
   <div class="min-h-screen flex flex-col">
     <!-- Masthead: glass over whatever scrolls beneath it. -->
     <header class="sticky top-0 z-40 border-b border-line bg-bg/75 backdrop-blur-xl">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3 sm:gap-6">
-        <NuxtLink to="/" class="flex items-center gap-2.5 shrink-0 group">
+      <!--
+        Tightened at the base breakpoint rather than at `sm`: the three blocks
+        below add up to ~344px of min-content, which overflowed a 320px phone by
+        nine pixels and gave the whole app a horizontal scrollbar.
+      -->
+      <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center gap-2 sm:gap-6">
+        <NuxtLink to="/" class="tap flex items-center gap-2.5 shrink-0 group">
           <AppLogo :size="34" />
           <span class="leading-tight">
-            <span class="block text-lg font-extrabold tracking-tight group-hover:text-brand transition-colors">{{ SITE_NAME }}</span>
+            <span class="block text-base sm:text-lg font-extrabold tracking-tight group-hover:text-brand transition-colors">{{ SITE_NAME }}</span>
             <span class="hidden sm:block text-[0.62rem] text-ink-3 font-medium tracking-wide">ارزش در معرض خطر</span>
           </span>
         </NuxtLink>
@@ -25,7 +49,7 @@ const nav = [
             v-for="item in nav"
             :key="item.to"
             :to="item.to"
-            class="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+            class="tap px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-lg text-sm font-semibold transition-colors"
             :class="route.path === item.to
               ? 'bg-card text-ink shadow-sm border border-line'
               : 'text-ink-3 hover:text-ink'"
@@ -66,14 +90,14 @@ const nav = [
 
           <div>
             <h3 class="eyebrow mb-4">پیمایش</h3>
-            <ul class="space-y-2.5 text-sm">
+            <ul class="space-y-1 text-sm">
               <li v-for="item in nav" :key="item.to">
-                <NuxtLink :to="item.to" class="text-ink-2 hover:text-brand transition-colors">
+                <NuxtLink :to="item.to" class="inline-block py-1.5 text-ink-2 hover:text-brand transition-colors">
                   {{ item.label }}
                 </NuxtLink>
               </li>
               <li>
-                <NuxtLink to="/#method" class="text-ink-2 hover:text-brand transition-colors">
+                <NuxtLink to="/#method" class="inline-block py-1.5 text-ink-2 hover:text-brand transition-colors">
                   روش محاسبه
                 </NuxtLink>
               </li>

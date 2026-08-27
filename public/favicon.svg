@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="واریسک">
+  <!--
+    The AppLogo mark, rebuilt for 16px. The component version is drawn for 34px
+    on a themed page: hairline strokes, a dashed cut, a translucent tail. All
+    three vanish in a browser tab, so this variant keeps the idea — a return
+    distribution with its loss tail cut off — and thickens everything that
+    carries it. Colours are frozen from the dark palette because a standalone
+    icon file has no access to the app's CSS variables.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0F1725"/>
+  <clipPath id="tail"><rect x="0" y="0" width="11.5" height="32"/></clipPath>
+  <path d="M4 24C9 24 10 8 16 8s7 16 12 16Z" fill="#FF6B7A" clip-path="url(#tail)"/>
+  <path d="M4 24C9 24 10 8 16 8s7 16 12 16" fill="none" stroke="#22D3B4"
+        stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.5 6.8V25.4" stroke="#E9EEF7" stroke-width="1.7" stroke-linecap="round" opacity="0.72"/>
+</svg>
