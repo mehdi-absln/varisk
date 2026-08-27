@@ -1,6 +1,6 @@
-// Shared contract between the portfolio form, the (future) risk engine and the
-// result components. The mock generator in `app/utils/mock.ts` and the tested
-// engine of phase 1 must both satisfy `RiskResult` exactly.
+// Shared contract between the portfolio form, the risk engine and the result
+// components. `calculateRisk` in `app/utils/stats.ts` is the only producer of
+// `RiskResult`, and it satisfies every invariant documented below.
 
 /** A Jalali date, as the user types it: ۱۴۰۴/۰۵/۱۲ */
 export type JalaliString = string
@@ -76,8 +76,9 @@ export interface RiskResult {
   amountMode: AmountMode
 
   /**
-   * Per-stock return series, oldest → newest. Filled by the engine in phase 1
-   * and rendered by the "جدول بازدهی سهام‌ها" table; absent from mock output.
+   * Per-stock return series, oldest → newest, each `periods` long. Always
+   * filled by `calculateRisk`; optional because nothing renders it yet — the
+   * "جدول بازدهی سهام‌ها" table is still to be built on top of it.
    */
   returns?: number[][]
 
