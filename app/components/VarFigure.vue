@@ -14,13 +14,19 @@ const worst = computed(() => Math.max(...props.levels.map(l => l.ratio), 1e-9))
 
 <template>
   <figure>
-    <div class="flex items-center justify-between gap-3">
-      <figcaption class="eyebrow">ارزش در معرض خطر · افق یک روز</figcaption>
+    <!--
+      The caption is a direct child of the figure, as the spec requires — nested
+      in the flex row it was invalid HTML and Vue warned that it could break
+      hydration. The row it used to sit in is rebuilt with the caption itself as
+      the flex container instead.
+    -->
+    <figcaption class="eyebrow flex items-center justify-between gap-3">
+      <span>ارزش در معرض خطر · افق یک روز</span>
       <span class="chip num">
         <span class="w-1.5 h-1.5 rounded-full bg-risk" />
         {{ faInt(headline.confidence) }}٪
       </span>
-    </div>
+    </figcaption>
 
     <p class="figure text-risk text-[2.1rem] sm:text-[2.75rem] mt-5">
       {{ faInt(Math.round(headline.amount)) }}

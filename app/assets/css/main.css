@@ -1,5 +1,45 @@
 @import "tailwindcss";
-@import "shabnam-font/dist/font-face.css";
+
+/*
+  ── Shabnam, self-hosted ────────────────────────────────────────────────────
+
+  The package's own font-face.css was doing real damage: five weights, each
+  offering eot/woff/ttf ahead of woff2, and not one `font-display`. The <h1> is
+  this page's LCP element, so it stayed invisible for the whole Bold download.
+
+  Declared here instead, which buys three things the package could not give us:
+  `swap` paints the headline immediately in a fallback, woff2 is the only format
+  offered (the app already requires `color-mix` and `@layer`, so anything that
+  cannot read woff2 cannot read this stylesheet either), and only the weights
+  that actually exist are declared.
+
+  Shabnam ships 400/500/700. The design leans on 600 and 800, which the browser
+  resolves to Bold — declaring faces the family does not have would not change
+  what gets drawn, only what gets downloaded.
+*/
+@font-face {
+  font-family: Shabnam;
+  src: url("/fonts/Shabnam.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Shabnam;
+  src: url("/fonts/Shabnam-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Shabnam;
+  src: url("/fonts/Shabnam-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 /*
   ── Varisk design system ───────────────────────────────────────────────────
@@ -268,6 +308,19 @@
     -moz-appearance: textfield;
   }
 
+  /*
+    A pane too wide for a phone: the stats table and the covariance matrix.
+    Containing the overscroll matters more than it looks — without it a
+    horizontal flick that runs off the end of the table carries on into the
+    browser's back-navigation gesture, and the user loses the page.
+  */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+
   /* A pill that states a fact: "۴ سهم", "۶۰ قیمت", "۹۵٪". */
   .chip {
     display: inline-flex;
@@ -310,6 +363,49 @@
 .row-leave-to { opacity: 0; transform: translateY(0.35rem) scale(0.985); }
 
 .row-move { transition: transform 0.28s ease; }
+
+/* ── Touch ────────────────────────────────────────────────────────────────── */
+
+/*
+ * iOS Safari zooms the whole viewport whenever a focused field's text is under
+ * 16px, so every tap into the portfolio form used to end in a jump the user
+ * then had to pinch back out of. Coarse pointers get 16px and the page holds
+ * still.
+ *
+ * Unlayered on purpose: the price textareas carry `text-xs`, and a Tailwind
+ * utility outranks anything in the `components` layer — the same collision the
+ * row transitions above document.
+ */
+@media (pointer: coarse) {
+  .field {
+    font-size: 1rem;
+  }
+}
+
+/*
+ * Controls that are deliberately small: a row's delete cross, a status chip.
+ * Drawing them at 44px would wreck the density of the list, so an invisible
+ * pseudo-element grows the *hit area* to the 44px minimum instead, while the
+ * painted size and the surrounding layout stay exactly as they are.
+ *
+ * Centred with physical `left`/`translate` rather than logical properties:
+ * `translate` is physical either way, so pairing it with `inset-inline-start`
+ * would centre in LTR and drift in RTL.
+ */
+@media (pointer: coarse) {
+  .tap {
+    position: relative;
+  }
+  .tap::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

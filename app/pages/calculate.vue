@@ -3,7 +3,13 @@ import type { AmountMode } from '~/types/portfolio'
 import type { StockDraft } from '~/components/StockRow.vue'
 import type { ParsedTable } from '~/utils/parseTable'
 
-useSeoMeta({ title: `محاسبهٔ ریسک — ${SITE_NAME}` })
+usePageSeo({
+  title: `محاسبهٔ ریسک — ${SITE_NAME}`,
+  description:
+    'پرتفوی سهام خود را وارد کنید و ارزش در معرض خطر را در سه سطح اطمینان '
+    + '۹۰، ۹۵ و ۹۹ درصد ببینید. محاسبه کاملاً در مرورگر انجام می‌شود.',
+  path: '/calculate',
+})
 
 /** Row identity is assigned here, never by the sample or upload helpers. */
 let nextStockId = 0
@@ -91,6 +97,15 @@ const touched = computed(() =>
   || !!marketSeries.value.trim() || !!dateStart.value || !!dateEnd.value,
 )
 
+/**
+ * Empty state in the spirit of the old Shalil prototype: until some row carries
+ * a name or price data, the stock panel leads with an instructive notice rather
+ * than trusting a blank form to speak for itself.
+ */
+const stocksEntered = computed(() =>
+  stocks.value.some(s => s.name.trim() || s.series.trim()),
+)
+
 // ── Dates ───────────────────────────────────────────────────────────────────
 
 const parsedStart = computed(() => parseJalali(dateStart.value))
@@ -169,17 +184,24 @@ const progress = computed(() => {
 
 /**
  * Live: the whole calculation is client-side, so there is no reason to make the
- * user press a button. Phase 1 swaps `mockRiskResult` for the tested engine.
+ * user press a button.
+ *
+ * The quantities are handed over already resolved — the same numbers the rows
+ * display as «عدد پیشنهادی» — so what the user reads beside each stock is
+ * exactly what the engine weighted.
  */
 const result = computed(() => {
   if (missing.value.length) return null
-  return mockRiskResult({
-    names: stocks.value.map(s => s.name),
-    quantities: quantities.value,
-    values: values.value,
+  return calculateRisk({
+    stocks: stocks.value.map((s, i) => ({
+      name: s.name,
+      quantity: quantities.value[i]!,
+      prices: seriesPerStock.value[i]!,
+    })),
+    marketPrices: marketPrices.value,
     dateRange: { start: dateStart.value.trim(), end: dateEnd.value.trim() },
     amountMode: amountMode.value,
-    periods: marketPrices.value.length - 1,
+    budget: budget.value ?? 0,
   })
 })
 </script>
@@ -203,13 +225,13 @@ const result = computed(() => {
           </div>
 
           <div class="flex items-center gap-2.5">
-            <button type="button" class="btn btn-ghost py-2 px-4 text-[0.82rem]" @click="loadSample">
+            <button type="button" class="tap btn btn-ghost py-2 px-4 text-[0.82rem]" @click="loadSample">
               پرتفوی نمونه
             </button>
             <button
               v-if="touched"
               type="button"
-              class="btn btn-ghost py-2 px-4 text-[0.82rem] text-ink-3"
+              class="tap btn btn-ghost py-2 px-4 text-[0.82rem] text-ink-3"
               @click="reset"
             >
               پاک کردن
@@ -270,8 +292,30 @@ const result = computed(() => {
               />
             </TransitionGroup>
 
+            <!--
+              Empty state: nothing entered yet. Guides the first-time user the
+              way the old Shalil prototype did — a soft notice beside the list
+              it describes — and hides itself the moment real data lands.
+            -->
+            <div
+              v-if="!stocksEntered"
+              class="flex items-start gap-2.5 rounded-xl bg-bg-soft border border-line-soft px-4 py-3.5"
+            >
+              <svg
+                width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                class="mt-1 shrink-0 text-brand"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" /><path d="M12 8v4.5M12 16h.01" />
+              </svg>
+              <p class="text-xs leading-7 text-ink-2">
+                هنوز سهامی انتخاب نشده است! نام هر سهم را در کادر بالا وارد و قیمت‌های پایانی آن را از اکسل بچسبانید؛ چند سهم که خواستید، «افزودن سهم» را بزنید.
+              </p>
+            </div>
+
             <div class="flex flex-wrap items-center justify-between gap-3 pt-4 mt-2 border-t border-line-soft">
-              <button type="button" class="btn btn-ghost py-1.5 px-3.5 text-[0.8rem]" @click="addStock">
+              <button type="button" class="tap btn btn-ghost py-1.5 px-3.5 text-[0.8rem]" @click="addStock">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
@@ -385,7 +429,14 @@ const result = computed(() => {
         </section>
 
         <!-- ── Live readout column ──────────────────── -->
-        <aside class="min-w-0 lg:sticky lg:top-24 lg:self-start space-y-3">
+        <!--
+          Ordered ahead of the form below `lg`. Stacked in DOM order the readout
+          landed nearly four screens down, so the headline number appeared where
+          nobody would see it — and while the portfolio is still incomplete this
+          panel is the checklist of what is missing, which is exactly what a
+          first-time user needs before they start typing rather than after.
+        -->
+        <aside class="order-first lg:order-none min-w-0 lg:sticky lg:top-24 lg:self-start space-y-3">
           <div class="panel p-6 sm:p-7">
             <template v-if="result">
               <VarFigure :levels="result.varLevels" :total-value="result.totalValue" />
@@ -407,7 +458,7 @@ const result = computed(() => {
           </div>
 
           <p class="text-xs text-ink-3 leading-7 px-1">
-            اعداد فعلی با دادهٔ نمونه ساخته می‌شوند تا طراحی ارزیابی شود؛ موتور واقعی در فاز بعدی جایگزین می‌شود.
+            اعداد از همین قیمت‌هایی که وارد کرده‌اید محاسبه می‌شوند؛ ارزش در معرض خطر پارامتری با فرض نرمال بودن بازده‌ها.
           </p>
         </aside>
       </div>

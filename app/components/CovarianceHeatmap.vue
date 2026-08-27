@@ -7,7 +7,29 @@ const props = defineProps<{
   covariance: number[][]
 }>()
 
-const hovered = ref<{ i: number, j: number } | null>(null)
+/** The cell whose exact coefficients the readout is showing. */
+const active = ref<{ i: number, j: number } | null>(null)
+
+/**
+ * A mouse rests on a cell; a finger cannot. The readout used to be hover-only,
+ * which left it permanently unreachable on a phone — and the panel's own hint
+ * told the user to do the one thing their device does not support.
+ *
+ * The two inputs are told apart by pointer type rather than by a media query,
+ * so a hybrid laptop follows whichever the user actually reached for, and the
+ * emulated `mouseenter` a touchscreen fires before `click` cannot toggle the
+ * selection straight back off.
+ */
+function hover(e: PointerEvent, cell: { i: number, j: number } | null) {
+  if (e.pointerType === 'mouse') active.value = cell
+}
+
+/** Touch and pen: tap to open, tap the open cell again to dismiss. */
+function tap(e: PointerEvent, i: number, j: number) {
+  if (e.pointerType === 'mouse') return
+  const a = active.value
+  active.value = a && a.i === i && a.j === j ? null : { i, j }
+}
 
 /** Persian names are long; the axis only has room for a short label. */
 function short(name: string) {
@@ -31,8 +53,8 @@ function cellStyle(c: number) {
 }
 
 const readout = computed(() => {
-  if (!hovered.value) return null
-  const { i, j } = hovered.value
+  if (!active.value) return null
+  const { i, j } = active.value
   return {
     pair: i === j ? props.names[i]! : `${props.names[i]} و ${props.names[j]}`,
     corr: props.correlation[i]![j]!,
@@ -60,7 +82,7 @@ const readout = computed(() => {
       </div>
     </div>
 
-    <div class="overflow-x-auto -mx-1 px-1">
+    <div class="scroll-x -mx-1 px-1">
       <table class="border-separate border-spacing-1">
         <thead>
           <tr>
@@ -83,12 +105,13 @@ const readout = computed(() => {
             <td v-for="(_, j) in names" :key="`c-${i}-${j}`" class="p-0">
               <div
                 class="w-[3.4rem] h-11 rounded-lg grid place-items-center text-[0.72rem] font-bold num cursor-default border transition-colors"
-                :class="hovered && hovered.i === i && hovered.j === j
+                :class="active && active.i === i && active.j === j
                   ? 'border-ink/50'
                   : 'border-line-soft'"
                 :style="cellStyle(correlation[i]![j]!)"
-                @mouseenter="hovered = { i, j }"
-                @mouseleave="hovered = null"
+                @pointerenter="hover($event, { i, j })"
+                @pointerleave="hover($event, null)"
+                @pointerup="tap($event, i, j)"
               >
                 {{ faDecimal(correlation[i]![j]!, 2) }}
               </div>
@@ -98,8 +121,12 @@ const readout = computed(() => {
       </table>
     </div>
 
-    <!-- Fixed height, so hovering a cell never reflows the panel. -->
-    <p class="mt-5 h-6 flex items-center text-xs text-ink-2">
+    <!--
+      A floor rather than a fixed height: reserving the line keeps selecting a
+      cell from reflowing the panel, but on a narrow phone the readout wraps to
+      a second line and a hard 1.5rem clipped it.
+    -->
+    <p class="mt-5 min-h-6 flex flex-wrap items-center gap-y-1 text-xs text-ink-2">
       <template v-if="readout">
         <b class="text-ink font-bold">{{ readout.pair }}</b>
         <span class="mx-2 text-line">|</span>
@@ -108,7 +135,7 @@ const readout = computed(() => {
         <span class="mx-2 text-line">|</span>
         <span class="num" dir="ltr">Cov = {{ readout.cov.toExponential(2) }}</span>
       </template>
-      <span v-else class="text-ink-3">روی هر خانه نگه دارید تا ضریب دقیق را ببینید.</span>
+      <span v-else class="text-ink-3">روی هر خانه بزنید یا نگه دارید تا ضریب دقیق را ببینید.</span>
     </p>
   </section>
 </template>

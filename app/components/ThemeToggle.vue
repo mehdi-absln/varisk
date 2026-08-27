@@ -5,7 +5,7 @@ const { theme, toggle } = useTheme()
 <template>
   <button
     type="button"
-    class="grid place-items-center w-9 h-9 rounded-xl border border-line text-ink-2 hover:text-ink hover:bg-card-hi transition-colors"
+    class="tap grid place-items-center w-9 h-9 rounded-xl border border-line text-ink-2 hover:text-ink hover:bg-card-hi transition-colors"
     :title="theme === 'dark' ? 'حالت روشن' : 'حالت تیره'"
     :aria-label="theme === 'dark' ? 'حالت روشن' : 'حالت تیره'"
     @click="toggle"

@@ -1,14 +1,25 @@
 <script setup lang="ts">
-useSeoMeta({
+usePageSeo({
   title: `${SITE_NAME} — نرم‌افزار آنلاین محاسبهٔ ارزش در معرض خطر (VaR)`,
   description: HEADLINE.subtitle,
-  ogTitle: SITE_NAME,
-  ogDescription: HEADLINE.title,
+  path: '/',
 })
 
 // The landing shows the same component the tool uses, on sample data — no
-// mocked-up screenshot that the product then fails to live up to.
-const preview = mockRiskResult()
+// mocked-up screenshot that the product then fails to live up to. The figure is
+// now genuinely computed: the sample series goes through the same engine the
+// «محاسبه» page runs. Deterministic (seeded), so server and client agree.
+const preview = calculateRisk({
+  stocks: sampleStocks().map(s => ({
+    name: s.name,
+    quantity: s.quantity,
+    prices: parsePriceSeries(s.series).prices,
+  })),
+  marketPrices: parsePriceSeries(sampleMarketSeries()).prices,
+  dateRange: sampleDateRange(),
+  amountMode: 'custom',
+  budget: DEFAULT_BUDGET,
+})
 
 const method = [
   {

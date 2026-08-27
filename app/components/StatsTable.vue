@@ -31,8 +31,8 @@ const period = computed(() => {
       </p>
     </header>
 
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm min-w-[42rem]">
+    <div class="scroll-x">
+      <table class="w-full text-sm min-w-[34rem] sm:min-w-[42rem]">
         <thead>
           <tr class="bg-bg-soft/60">
             <th class="text-start font-semibold text-ink-3 text-[0.7rem] py-3 px-6">سهم</th>
@@ -45,7 +45,7 @@ const period = computed(() => {
         </thead>
         <tbody>
           <tr v-for="r in rows" :key="r.name" class="border-t border-line-soft hover:bg-card-hi transition-colors">
-            <td class="py-3 px-6 font-semibold truncate max-w-40">{{ r.name }}</td>
+            <td class="py-3 px-4 sm:px-6 font-semibold truncate max-w-40">{{ r.name }}</td>
             <td class="py-3 px-3 text-end text-ink-2 num">{{ faInt(r.quantity) }}</td>
             <td class="py-3 px-3 text-end text-ink-2 num">{{ faPercent(r.weight, 1) }}</td>
             <td class="py-3 px-3 text-end num font-semibold" :class="r.mean >= 0 ? 'text-gain' : 'text-risk'">
@@ -73,6 +73,8 @@ const period = computed(() => {
     </div>
 
     <p class="text-xs text-ink-3 leading-7 px-6 sm:px-7 py-4 border-t border-line">
+      <!-- Six columns never fit a phone; say so rather than leave the scroll to be discovered. -->
+      <span class="sm:hidden">جدول را به پهنا بکشید تا ستون‌های بعدی را ببینید. </span>
       انحراف معیار پرتفوی از همهٔ سهم‌ها کمتر است؛ همین اثر تنوع‌بخشی است.
     </p>
   </section>

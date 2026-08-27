@@ -105,7 +105,7 @@ const status = computed(() => {
 
       <button
         type="button"
-        class="col-start-2 row-start-3 sm:col-start-5 sm:row-start-1 justify-self-start sm:justify-self-end chip text-[0.68rem] transition-colors"
+        class="tap col-start-2 row-start-3 sm:col-start-5 sm:row-start-1 justify-self-start sm:justify-self-end chip text-[0.68rem] transition-colors"
         :class="{
           'text-gain border-gain/30 bg-gain/10': status.tone === 'ok',
           'text-gold border-gold/30 bg-gold/10': status.tone === 'warn',
@@ -126,9 +126,10 @@ const status = computed(() => {
 
       <button
         type="button"
-        class="col-start-3 row-start-1 sm:col-start-6 justify-self-end grid place-items-center w-7 h-7 rounded-lg text-ink-3 hover:text-risk hover:bg-risk/10 disabled:opacity-25 disabled:hover:text-ink-3 disabled:hover:bg-transparent transition-colors"
+        class="tap col-start-3 row-start-1 sm:col-start-6 justify-self-end grid place-items-center w-7 h-7 rounded-lg text-ink-3 hover:text-risk hover:bg-risk/10 disabled:opacity-25 disabled:hover:text-ink-3 disabled:hover:bg-transparent transition-colors"
         :disabled="!canRemove"
         title="حذف سهم"
+        aria-label="حذف سهم"
         @click="emit('remove')"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
