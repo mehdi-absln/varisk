@@ -12,6 +12,15 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   runtimeConfig: {
+    // Server-only. Every key here is overridden at runtime by its NUXT_-prefixed
+    // environment variable — NUXT_TURSO_URL and friends — so nothing secret is
+    // baked into the build and rotating a token needs no redeploy. Empty is a
+    // deliberate default: `useDb` and `signToken` say so themselves rather than
+    // failing somewhere further in with a confusing error.
+    tursoUrl: '',
+    tursoAuthToken: '',
+    jwtSecret: '',
+
     public: {
       // Open Graph and canonical links must be absolute, and a build has no way
       // to know the host it will be served from. This is the production origin;

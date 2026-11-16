@@ -29,3 +29,17 @@ const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
 export function toPersianDigits(input: string | number): string {
   return String(input).replace(/\d/g, d => PERSIAN_DIGITS[Number(d)]!)
 }
+
+/**
+ * A stored timestamp as a Jalali date: 1755000000000 → ۱۴۰۴/۰۵/۲۳
+ *
+ * `jalali.ts` deliberately carries no Gregorian conversion — it only reads what
+ * the user types. This is the other direction, and Intl already knows it.
+ */
+export function faDate(ms: number): string {
+  return new Intl.DateTimeFormat('fa-IR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(ms))
+}

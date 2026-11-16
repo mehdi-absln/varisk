@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { faInt } from './format'
+import { faInt } from '#shared/utils/format'
+import { MIN_PRICES } from '#shared/utils/portfolioLimits'
 
 /**
  * Validation for the portfolio form.
@@ -13,9 +14,6 @@ import { faInt } from './format'
  * whole. `validatePortfolio` does the splitting, so the rules live in one place
  * and the page only decides where to paint them.
  */
-
-/** Fewest prices a series can carry and still yield a variance worth trusting. */
-export const MIN_PRICES = 3
 
 /** Shown under the offending row, so each is phrased about that row alone. */
 export const ROW_MESSAGES = {

@@ -9,6 +9,7 @@ import {
   covariance,
   covarianceMatrix,
   mean,
+  normalQuantile,
   portfolioMean,
   portfolioStdDev,
   sampleVariance,
@@ -278,14 +279,29 @@ describe('weightsFromValues', () => {
 
 // ── Value at Risk ───────────────────────────────────────────────────────────
 
+describe('normalQuantile (Acklam probit algorithm)', () => {
+  it('matches known mathematical quantiles within 1e-8', () => {
+    expect(normalQuantile(0.5)).toBe(0)
+    expect(normalQuantile(0.9)).toBeCloseTo(1.2815515655, 8)
+    expect(normalQuantile(0.95)).toBeCloseTo(1.64485362695, 8)
+    expect(normalQuantile(0.975)).toBeCloseTo(1.9599639845, 8)
+    expect(normalQuantile(0.99)).toBeCloseTo(2.3263478740, 8)
+  })
+
+  it('handles lower tails symmetrically', () => {
+    expect(normalQuantile(0.05)).toBeCloseTo(-1.64485362695, 8)
+    expect(normalQuantile(0.01)).toBeCloseTo(-2.3263478740, 8)
+  })
+})
+
 describe('calculateParametricVaR', () => {
-  it('scales σ by the z-score and the portfolio value', () => {
-    // 1.645 × 0.02 = 3.29% of 1,000,000,000
+  it('scales σ by the exact z-score and the portfolio value', () => {
+    // 1.6448536... × 0.02 = 0.032897... of 1,000,000,000
     const v = calculateParametricVaR(0.02, 1_000_000_000, 95)
     expect(v.confidence).toBe(95)
-    expect(v.z).toBe(1.645)
-    expect(v.ratio).toBeCloseTo(0.0329, 12)
-    expect(v.amount).toBeCloseTo(32_900_000, 6)
+    expect(v.z).toBeCloseTo(1.6448536, 6)
+    expect(v.ratio).toBeCloseTo(1.64485362695 * 0.02, 6)
+    expect(v.amount).toBeCloseTo(1.64485362695 * 0.02 * 1_000_000_000, 1)
   })
 
   it('grows with confidence', () => {
@@ -298,10 +314,16 @@ describe('calculateParametricVaR', () => {
     expect(calculateParametricVaR(0.02, 1_000_000_000).confidence).toBe(95)
   })
 
-  it('falls back to 95 with a matching z for an unknown level', () => {
-    const v = calculateParametricVaR(0.02, 1_000_000_000, 97)
-    expect(v.confidence).toBe(95)
-    expect(v.z).toBe(1.645)
+  it('calculates exact quantiles for arbitrary confidence levels (e.g. 97.5%)', () => {
+    const v = calculateParametricVaR(0.02, 1_000_000_000, 97.5)
+    expect(v.confidence).toBe(97.5)
+    expect(v.z).toBeCloseTo(1.959964, 5)
+  })
+
+  it('scales with horizon via square-root-of-time rule (e.g. Basel 10-day)', () => {
+    const v1 = calculateParametricVaR(0.02, 1_000_000_000, 99, 1)
+    const v10 = calculateParametricVaR(0.02, 1_000_000_000, 99, 10)
+    expect(v10.amount).toBeCloseTo(v1.amount * Math.sqrt(10), 4)
   })
 
   it('is zero for a riskless portfolio', () => {
@@ -457,7 +479,7 @@ describe('calculateRisk', () => {
 
   it('orders the VaR levels 90 → 95 → 99 and ties them to σₚ', () => {
     expect(result.varLevels.map(l => l.confidence)).toEqual([90, 95, 99])
-    expect(result.varLevels[1]!.ratio).toBeCloseTo(1.645 * result.portfolioStdDev, 12)
+    expect(result.varLevels[1]!.ratio).toBeCloseTo(result.varLevels[1]!.z * result.portfolioStdDev, 12)
     expect(result.varLevels[1]!.amount).toBeCloseTo(result.varLevels[1]!.ratio * result.totalValue, 6)
   })
 
@@ -488,8 +510,8 @@ describe('calculateRisk', () => {
       expect(level.ratio).toBeCloseTo(level.z * solo.portfolioStdDev, 12)
       expect(level.amount).toBeCloseTo(level.z * solo.portfolioStdDev * solo.totalValue, 6)
     }
-    // 1.645 × 0.1154700538 × 98,010
-    expect(solo.varLevels[1]!.amount).toBeCloseTo(18_616.83, 1)
+    // 1.6448536... × 0.1154700538 × 98,010
+    expect(solo.varLevels[1]!.amount).toBeCloseTo(18_615.17, 1)
   })
 
   it('stays finite across adversarial but well-formed portfolios', () => {

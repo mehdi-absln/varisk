@@ -23,18 +23,82 @@ import { suggestQuantity } from './quantity'
 export type ReturnMethod = 'simple' | 'log'
 
 /**
- * One-sided normal quantiles for the confidence levels the roadmap specifies.
- * Rounded to three decimals on purpose — these are the figures the 1400
- * prototype quoted, and the result panel prints them beside each VaR level.
+ * Peter J. Acklam's inverse normal cumulative distribution function (probit).
+ * Accurate to relative error < 1.15e-9 across the entire domain (0, 1).
+ * Matches SciPy's scipy.stats.norm.ppf and Excel's NORM.S.INV.
  */
-export const Z_SCORES: ReadonlyArray<{ confidence: number, z: number }> = [
-  { confidence: 90, z: 1.282 },
-  { confidence: 95, z: 1.645 },
-  { confidence: 99, z: 2.326 },
-]
+export function normalQuantile(p: number): number {
+  if (p <= 0) return -Infinity
+  if (p >= 1) return Infinity
+
+  const a = [
+    -3.969683028665376e+01,
+     2.209460984245205e+02,
+    -2.759285104469687e+02,
+     1.383577518672690e+02,
+    -3.066479806614716e+01,
+     2.506628277459239e+00,
+  ]
+
+  const b = [
+    -5.447609879822406e+01,
+     1.615858368580409e+02,
+    -1.556989798598866e+02,
+     6.680131188771972e+01,
+    -1.328068155288572e+01,
+  ]
+
+  const c = [
+    -7.784894002430293e-03,
+    -3.223964580411365e-01,
+    -2.400758277161838e+00,
+    -2.549732539343734e+00,
+     4.374664141464968e+00,
+     2.938163982698783e+00,
+  ]
+
+  const d = [
+     7.784695709041462e-03,
+     3.224671290700398e-01,
+     2.445134137142996e+00,
+     3.754408661907416e+00,
+  ]
+
+  const pLow = 0.02425
+  const pHigh = 1 - pLow
+
+  if (p < pLow) {
+    const q = Math.sqrt(-2 * Math.log(p))
+    return (((((c[0]! * q + c[1]!) * q + c[2]!) * q + c[3]!) * q + c[4]!) * q + c[5]!) /
+           ((((d[0]! * q + d[1]!) * q + d[2]!) * q + d[3]!) * q + 1)
+  }
+
+  if (p <= pHigh) {
+    const q = p - 0.5
+    const r = q * q
+    return (((((a[0]! * r + a[1]!) * r + a[2]!) * r + a[3]!) * r + a[4]!) * r + a[5]!) * q /
+           (((((b[0]! * r + b[1]!) * r + b[2]!) * r + b[3]!) * r + b[4]!) * r + 1)
+  }
+
+  const q = Math.sqrt(-2 * Math.log(1 - p))
+  return -(((((c[0]! * q + c[1]!) * q + c[2]!) * q + c[3]!) * q + c[4]!) * q + c[5]!) /
+          ((((d[0]! * q + d[1]!) * q + d[2]!) * q + d[3]!) * q + 1)
+}
+
+/** Standard confidence levels used by the dashboard. */
+export const DEFAULT_CONFIDENCE_LEVELS = [90, 95, 99] as const
+
+/**
+ * Normal quantiles for the standard confidence levels, computed dynamically with
+ * machine-precision inverse normal CDF.
+ */
+export const Z_SCORES: ReadonlyArray<{ confidence: number, z: number }> = DEFAULT_CONFIDENCE_LEVELS.map(c => ({
+  confidence: c,
+  z: normalQuantile(c / 100),
+}))
 
 /** Default confidence, and the fallback when an unknown level is asked for. */
-const DEFAULT_CONFIDENCE = 95
+export const DEFAULT_CONFIDENCE = 95
 
 // ── Descriptive statistics ──────────────────────────────────────────────────
 
@@ -217,29 +281,40 @@ export function weightsFromValues(values: number[]): number[] {
 // ── Value at Risk ───────────────────────────────────────────────────────────
 
 /**
- * Parametric (variance–covariance) VaR over one period: the loss that is only
- * exceeded with probability 1 − confidence, assuming normal returns.
+ * Parametric (variance–covariance) VaR over an arbitrary holding horizon:
+ *   VaR_h = z_α · σₚ · √h · V
  *
- * An unrecognised confidence level falls back to 95 *including its z* — the
- * returned `VarLevel` is what the UI labels itself with, so a mismatched
- * confidence/z pair would print a lie.
+ * Assumes normally distributed returns with zero mean over short horizons,
+ * scaled by the square-root-of-time rule (Basel Committee standard).
  */
 export function calculateParametricVaR(
   portfolioStdDev: number,
   totalValue: number,
   confidence: number = DEFAULT_CONFIDENCE,
+  horizonDays: number = 1,
 ): VarLevel {
-  const level = Z_SCORES.find(l => l.confidence === confidence)
-    ?? Z_SCORES.find(l => l.confidence === DEFAULT_CONFIDENCE)!
-
-  const ratio = level.z * Math.max(0, portfolioStdDev)
-  return { confidence: level.confidence, z: level.z, ratio, amount: ratio * totalValue }
+  const p = confidence > 1 ? confidence / 100 : confidence
+  const clampedP = Math.min(Math.max(p, 1e-7), 1 - 1e-7)
+  const z = normalQuantile(clampedP)
+  const h = Math.max(1, horizonDays)
+  const ratio = z * Math.max(0, portfolioStdDev) * Math.sqrt(h)
+  return {
+    confidence: confidence > 1 ? confidence : Math.round(confidence * 100),
+    z,
+    ratio,
+    amount: ratio * totalValue,
+    horizonDays: h,
+  }
 }
 
 /** All three levels, ordered 90 → 95 → 99 as the result panel reads them. */
-export function calculateVarLevels(portfolioStdDev: number, totalValue: number): VarLevel[] {
-  return Z_SCORES.map(({ confidence }) =>
-    calculateParametricVaR(portfolioStdDev, totalValue, confidence))
+export function calculateVarLevels(
+  portfolioStdDev: number,
+  totalValue: number,
+  horizonDays: number = 1,
+): VarLevel[] {
+  return DEFAULT_CONFIDENCE_LEVELS.map(confidence =>
+    calculateParametricVaR(portfolioStdDev, totalValue, confidence, horizonDays))
 }
 
 // ── Orchestrator ────────────────────────────────────────────────────────────
@@ -256,6 +331,7 @@ export function calculateVarLevels(portfolioStdDev: number, totalValue: number):
  */
 export function calculateRisk(input: PortfolioInput): RiskResult {
   const { marketPrices, dateRange, amountMode, budget } = input
+  const horizonDays = input.horizonDays ?? 1
 
   // A row with fewer than two prices yields no return at all. In practice
   // these are the blank slots the form keeps at the bottom — the validator
@@ -295,6 +371,7 @@ export function calculateRisk(input: PortfolioInput): RiskResult {
     periods: returns[0]?.length ?? 0,
     dateRange,
     amountMode,
+    horizonDays,
     returns,
     means,
     variances,
@@ -304,6 +381,6 @@ export function calculateRisk(input: PortfolioInput): RiskResult {
     betas: returns.map(r => calculateBeta(r, marketReturns)),
     portfolioMean: portfolioMean(weights, means),
     portfolioStdDev: sigma,
-    varLevels: calculateVarLevels(sigma, totalValue),
+    varLevels: calculateVarLevels(sigma, totalValue, horizonDays),
   }
 }

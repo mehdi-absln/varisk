@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { AmountMode } from '~/types/portfolio'
+import type { AmountMode, PortfolioInput } from '~/types/portfolio'
 import type { StockDraft } from '~/components/StockRow.vue'
 import type { ParsedTable } from '~/utils/parseTable'
+import type { PortfolioFormFill } from '~/utils/portfolioIo'
 
 usePageSeo({
   title: `محاسبهٔ ریسک — ${SITE_NAME}`,
@@ -190,19 +191,108 @@ const progress = computed(() => {
  * display as «عدد پیشنهادی» — so what the user reads beside each stock is
  * exactly what the engine weighted.
  */
-const result = computed(() => {
-  if (missing.value.length) return null
-  return calculateRisk({
-    stocks: stocks.value.map((s, i) => ({
-      name: s.name,
-      quantity: quantities.value[i]!,
-      prices: seriesPerStock.value[i]!,
-    })),
-    marketPrices: marketPrices.value,
-    dateRange: { start: dateStart.value.trim(), end: dateEnd.value.trim() },
-    amountMode: amountMode.value,
-    budget: budget.value ?? 0,
-  })
+const portfolioInput = computed<PortfolioInput>(() => ({
+  stocks: stocks.value.map((s, i) => ({
+    name: s.name,
+    quantity: quantities.value[i]!,
+    prices: seriesPerStock.value[i]!,
+  })),
+  marketPrices: marketPrices.value,
+  dateRange: { start: dateStart.value.trim(), end: dateEnd.value.trim() },
+  amountMode: amountMode.value,
+  budget: budget.value ?? 0,
+}))
+
+const result = computed(() =>
+  missing.value.length ? null : calculateRisk(portfolioInput.value),
+)
+
+// ── Saving and reopening ────────────────────────────────────────────────────
+
+/**
+ * Saving stores the *input*, never the result: the numbers above are derived,
+ * and a stored copy of them would eventually disagree with the data printed
+ * beside it. Reopening runs the same engine over the same input, so what comes
+ * back is recomputed, not remembered.
+ */
+
+const { signedIn } = useAuth()
+const route = useRoute()
+
+/** Set when this form is showing a stored portfolio, so saving updates it. */
+const savedId = ref<number | null>(null)
+const title = ref('')
+const saving = ref(false)
+const saveIssues = ref<string[]>([])
+const saveNote = ref('')
+
+/** What the portfolio would be called if the user names nothing. */
+const suggestedTitle = computed(() => suggestTitle(stocks.value.map(s => s.name)))
+
+/** A stored portfolio, into the form. The row ids are assigned here, as always. */
+function applyFill(fill: PortfolioFormFill) {
+  stocks.value = withIds(fill.stocks)
+  marketSeries.value = fill.marketSeries
+  dateStart.value = fill.dateStart
+  dateEnd.value = fill.dateEnd
+  amountMode.value = fill.amountMode
+  budget.value = fill.budget
+  tableNotes.value = []
+}
+
+async function save() {
+  if (!result.value) return
+
+  const name = title.value.trim() || suggestedTitle.value
+  const { payload, issues } = buildPayload(name, portfolioInput.value)
+  if (!payload) {
+    saveIssues.value = issues
+    return
+  }
+
+  saveIssues.value = []
+  saveNote.value = ''
+  saving.value = true
+  try {
+    if (savedId.value === null) {
+      const { id } = await $fetch('/api/portfolios', { method: 'POST', body: payload })
+      savedId.value = id
+      saveNote.value = 'ذخیره شد.'
+    }
+    else {
+      await $fetch(`/api/portfolios/${savedId.value}`, { method: 'PUT', body: payload })
+      saveNote.value = 'به‌روزرسانی شد.'
+    }
+    title.value = name
+  }
+  catch (error) {
+    saveIssues.value = [apiMessage(error, 'ذخیره نشد. دوباره تلاش کنید.')]
+  }
+  finally {
+    saving.value = false
+  }
+}
+
+/**
+ * Opening `?portfolio=<id>` fills the form from a saved row.
+ *
+ * On the client rather than during render: the page is public and this is the
+ * one thing on it that needs a session, and a signed-out visitor arriving on
+ * somebody's link should still get the calculator, not an error page.
+ */
+onMounted(async () => {
+  const id = Number(route.query.portfolio)
+  if (!Number.isInteger(id) || id <= 0) return
+
+  try {
+    const loaded = await $fetch(`/api/portfolios/${id}`)
+    applyFill(toFormFill(loaded.payload))
+    title.value = loaded.payload.title
+    savedId.value = loaded.id
+  }
+  catch (error) {
+    saveIssues.value = [apiMessage(error, 'این پرتفوی باز نشد.')]
+  }
 })
 </script>
 
@@ -455,6 +545,61 @@ const result = computed(() => {
                 </li>
               </ul>
             </template>
+          </div>
+
+          <!--
+            Offered only once there is a number: a name is being attached to a
+            result, and until the portfolio computes there is nothing to attach
+            it to. For a signed-out reader this is where the account is first
+            worth having, which is why the invitation lives here and not in a
+            banner at the top of the page.
+          -->
+          <div v-if="result" class="panel p-5">
+            <template v-if="signedIn">
+              <div class="flex items-baseline justify-between mb-3">
+                <h2 class="text-sm font-extrabold tracking-tight">ذخیرهٔ پرتفوی</h2>
+                <NuxtLink to="/portfolios" class="text-xs text-ink-3 hover:text-brand transition-colors">
+                  پروژه‌های من
+                </NuxtLink>
+              </div>
+
+              <input
+                v-model="title"
+                type="text"
+                :placeholder="suggestedTitle"
+                class="field text-sm"
+              >
+
+              <button
+                type="button"
+                class="tap btn btn-primary w-full justify-center py-2 mt-3 text-[0.85rem]"
+                :disabled="saving"
+                @click="save"
+              >
+                {{ saving ? 'کمی صبر کنید…' : savedId === null ? 'ذخیره' : 'به‌روزرسانی' }}
+              </button>
+
+              <p v-if="saveNote" class="text-xs text-gain mt-3">{{ saveNote }}</p>
+            </template>
+
+            <template v-else>
+              <p class="text-sm font-extrabold tracking-tight">این پرتفوی را نگه دارید</p>
+              <p class="text-xs text-ink-2 leading-7 mt-2">
+                با یک حساب، همین پرتفوی بعداً با یک کلیک باز می‌شود و دوباره در مرورگر شما محاسبه می‌گردد.
+              </p>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <NuxtLink to="/auth/signup" class="tap btn btn-primary py-2 px-4 text-[0.82rem]">
+                  ثبت‌نام
+                </NuxtLink>
+                <NuxtLink to="/auth/signin" class="tap btn btn-ghost py-2 px-4 text-[0.82rem]">
+                  ورود
+                </NuxtLink>
+              </div>
+            </template>
+
+            <ul v-if="saveIssues.length" class="mt-3 space-y-1.5">
+              <li v-for="m in saveIssues" :key="m" class="text-xs text-risk leading-6">{{ m }}</li>
+            </ul>
           </div>
 
           <p class="text-xs text-ink-3 leading-7 px-1">

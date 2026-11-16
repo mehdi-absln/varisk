@@ -1,4 +1,4 @@
-import { toPersianDigits } from './format'
+import { toPersianDigits } from '#shared/utils/format'
 import { toLatinDigits } from './parsePrices'
 
 // Parsing for an uploaded price table: one column per stock, one row per day.

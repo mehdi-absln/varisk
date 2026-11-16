@@ -25,3 +25,8 @@ logs
 
 .vercel
 .env*
+
+
+# Turso local files & credentials
+.turso-*
+turso_install.sh

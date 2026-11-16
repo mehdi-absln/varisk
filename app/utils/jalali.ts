@@ -1,4 +1,4 @@
-import { toPersianDigits } from './format'
+import { toPersianDigits } from '#shared/utils/format'
 import { toLatinDigits } from './parsePrices'
 
 // Jalali (Shamsi) date handling for the "تاریخ اطلاعات" range.

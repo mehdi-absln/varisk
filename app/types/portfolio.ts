@@ -40,18 +40,22 @@ export interface PortfolioInput {
   amountMode: AmountMode
   /** Notional capital behind the suggested share counts, in toman. */
   budget: number
+  /** Risk horizon in trading days, default 1 (e.g. 10 for Basel 10-day). */
+  horizonDays?: number
 }
 
 /** Value at Risk at one confidence level. */
 export interface VarLevel {
-  /** 90 | 95 | 99 */
+  /** Confidence percentage, e.g. 90 | 95 | 99 */
   confidence: number
-  /** One-sided normal quantile: 1.282 / 1.645 / 2.326 */
+  /** One-sided standard normal quantile (inverse CDF) */
   z: number
   /** Loss as a fraction of portfolio value. */
   ratio: number
   /** Loss in toman. */
   amount: number
+  /** Holding horizon in days (default 1). */
+  horizonDays?: number
 }
 
 /**
@@ -59,6 +63,8 @@ export interface VarLevel {
  * order as `names`; the matrices are n×n over that same order.
  */
 export interface RiskResult {
+  /** Risk horizon in trading days. */
+  horizonDays?: number
   names: string[]
   /** Share count per stock. */
   quantities: number[]

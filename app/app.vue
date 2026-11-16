@@ -20,6 +20,12 @@ useSeoMeta({
   author: BUILDER,
 })
 
+const { signedIn, fetchUser } = useAuth()
+
+// Resolved before the markup is rendered, so a signed-in reader is never sent a
+// header that says «ورود» and then corrects itself after hydration.
+await fetchUser()
+
 const nav = [
   { to: '/', label: 'معرفی' },
   { to: '/calculate', label: 'محاسبه' },
@@ -60,6 +66,20 @@ const nav = [
 
         <div class="mr-auto flex items-center gap-2">
           <ThemeToggle />
+
+          <!--
+            The account entry is `sm` and up only. The note on the row above
+            records that the three existing blocks already come within nine
+            pixels of a 320px screen; a fourth would put the app back into
+            horizontal scrolling. A phone reaches the same two places through
+            the footer, and through the save panel on the calculate page.
+          -->
+          <NuxtLink
+            :to="signedIn ? '/portfolios' : '/auth/signin'"
+            class="btn btn-ghost hidden sm:inline-flex py-2 px-3.5 text-[0.82rem]"
+          >
+            {{ signedIn ? 'پروژه‌های من' : 'ورود' }}
+          </NuxtLink>
           <NuxtLink
             v-if="route.path !== '/calculate'"
             to="/calculate"
@@ -99,6 +119,14 @@ const nav = [
               <li>
                 <NuxtLink to="/#method" class="inline-block py-1.5 text-ink-2 hover:text-brand transition-colors">
                   روش محاسبه
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  :to="signedIn ? '/portfolios' : '/auth/signin'"
+                  class="inline-block py-1.5 text-ink-2 hover:text-brand transition-colors"
+                >
+                  {{ signedIn ? 'پروژه‌های من' : 'ورود' }}
                 </NuxtLink>
               </li>
             </ul>

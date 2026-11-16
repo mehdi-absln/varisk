@@ -3,15 +3,20 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "build": "nuxt build --dotenv .env.local",
+    "dev": "nuxt dev --dotenv .env.local",
+    "preview": "nuxt preview --dotenv .env.local",
     "postinstall": "nuxt prepare",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node -e \"require('fs').mkdirSync('.data',{recursive:true})\" && drizzle-kit migrate"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.2",
+    "jose": "^6.2.10",
     "nuxt": "^4.5.2",
     "shabnam-font": "^5.0.0",
     "vue": "^3.5.41",
@@ -20,6 +25,8 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.3.3",
     "vitest": "^4.1.11"
   }
